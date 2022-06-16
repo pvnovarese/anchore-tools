@@ -38,7 +38,7 @@ jobs:
       run: |
         docker build . --file Dockerfile --tag localbuild/testimage:latest
         
-    - name: Scan Umage
+    - name: Scan Image
       uses: anchore/scan-action@v3
       id: scan
       with:
