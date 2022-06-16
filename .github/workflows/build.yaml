@@ -92,7 +92,7 @@ jobs:
         
     - name: Add to Enterprise Queue
       run: | 
-        anchore-cli image add --noautosubscribe --dockerfile ./Dockerfile ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:${IMAGE_TAG} --annotation actor=${GITHUB_ACTOR}
+        anchore-cli image add --force --noautosubscribe --dockerfile ./Dockerfile ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:${IMAGE_TAG} --annotation actor=${GITHUB_ACTOR}
         
     - name: Wait for Enterprise Analysis
       run: |
