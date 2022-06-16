@@ -1,9 +1,12 @@
 FROM alpine:latest
+
 MAINTAINER Paul Novarese <pvn@novarese.net>
 LABEL maintainer="pvn@novarese.net"
 LABEL name="anchore-tools"
 LABEL org.opencontainers.image.title="anchore-tools"
 LABEL org.opencontainers.image.description="anchore tools"
+
+HEALTHCHECK --timeout=10s CMD /bin/true || exit 1
 
 # Installing required packages
 RUN apk add --no-cache --upgrade \
