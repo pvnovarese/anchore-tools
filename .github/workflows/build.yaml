@@ -1,0 +1,104 @@
+# This workflow checks out code, builds an image, performs a container image
+# scan, evaluates the image, and promotes it if it passes.
+
+name: Build and Scan
+
+on: 
+  #push:
+  #  branches:
+  #    - main
+  schedule:
+    - cron: '52 23 * * 5'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Manual Build'  
+        
+env:
+  ANCHORE_CLI_USER: ${{ secrets.ANCHORE_CLI_USER }}
+  ANCHORE_CLI_PASS: ${{ secrets.ANCHORE_CLI_PASS }}
+  ANCHORE_CLI_URL: ${{ secrets.ANCHORE_CLI_URL }}
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_TAG: weekly
+
+  
+jobs:
+
+  Build-Push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2      
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build Local Container
+      run: |
+        docker build . --file Dockerfile --tag localbuild/testimage:latest
+        
+    - name: Scan Umage
+      uses: anchore/scan-action@v3
+      id: scan
+      with:
+        image: localbuild/testimage:latest
+        fail-build: false
+        severity-cutoff: critical
+        acs-report-enable: true
+        
+    - name: Upload Anchore Scan SARIF Report
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif }}
+
+    - name: Tag Docker Image
+      run: |
+        docker -D tag localbuild/testimage:latest ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:${IMAGE_TAG}
+    - name: Login to Registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${IMAGE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+
+    - name: Push Docker Image
+      run: |
+        docker push ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:${IMAGE_TAG}
+        
+    - name: Archive Dockerfile
+      uses: actions/upload-artifact@v2
+      with:
+        name: Dockerfile
+        path: Dockerfile
+        retention-days: 2
+
+        
+  Anchore-Enterprise:
+    needs: Build-Push
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download Dockerfile Artifact 
+      uses: actions/download-artifact@v2
+      with:
+        name: Dockerfile
+        
+    - name: Install anchore-cli
+      run: |
+        sudo apt-get install python3-pip
+        pip install anchorecli
+        export PATH="$HOME/.local/bin/:$PATH"
+        
+    - name: Verify Anchore Ready and Reachable
+      run: |
+        anchore-cli --debug system status 
+        
+    - name: Add to Enterprise Queue
+      run: | 
+        anchore-cli image add --noautosubscribe --dockerfile ./Dockerfile ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:${IMAGE_TAG} --annotation actor=${GITHUB_ACTOR}
+        
+    - name: Wait for Enterprise Analysis
+      run: |
+        anchore-cli image wait ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:${IMAGE_TAG}
+        
+    - name: Activate Policy and Vulnerability Subscriptions
+      run: |
+        anchore-cli subscription activate policy_eval ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:${IMAGE_TAG}
+        anchore-cli subscription activate vuln_update ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:${IMAGE_TAG}
