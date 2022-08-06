@@ -24,6 +24,8 @@ RUN apk add --no-cache --upgrade \
     ### && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin \
     ### && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin 
 
+RUN date > /image_build_timestamp_$(date +%Y-%m-%d_%T)
+
 # Setting WORKDIR and USER 
 USER nobody 
 WORKDIR /tmp
