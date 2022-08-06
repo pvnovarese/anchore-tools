@@ -10,7 +10,6 @@ HEALTHCHECK --timeout=10s CMD /bin/true || exit 1
 
 # Installing required packages
 RUN apk add --no-cache --upgrade \
-    vim \
     curl \
     wget \
     grep \
