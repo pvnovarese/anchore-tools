@@ -15,32 +15,25 @@ on:
         description: 'Manual Build'  
         
 env:
-  ANCHORE_CLI_USER: ${{ secrets.ANCHORE_CLI_USER }}
-  ANCHORE_CLI_PASS: ${{ secrets.ANCHORE_CLI_PASS }}
-  ANCHORE_CLI_URL: ${{ secrets.ANCHORE_CLI_URL }}
   ANCHORECTL_USERNAME: ${{ secrets.ANCHORECTL_USERNAME }}
   ANCHORECTL_PASSWORD: ${{ secrets.ANCHORECTL_PASSWORD }}
   ANCHORECTL_URL: ${{ secrets.ANCHORECTL_URL }}
   IMAGE_REGISTRY: ghcr.io
-  IMAGE_TAG: weekly
+  IMAGE_TAG: weekly-
 
   
 jobs:
 
   Build-Push:
     runs-on: ubuntu-latest
-    
     steps:
     
     - name: "Set environmental variables"
       run: |
-        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}-${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
     
     - name: Checkout Code
       uses: actions/checkout@v2      
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
 
     - name: Build Local Container
       run: |
@@ -71,12 +64,11 @@ jobs:
   Anchore-Enterprise:
     needs: Build-Push
     runs-on: ubuntu-latest
-    
     steps:
     
     - name: "Set environmental variables"
       run: |
-        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}" >> $GITHUB_ENV
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
         
     - name: Checkout Code
       uses: actions/checkout@v2      
