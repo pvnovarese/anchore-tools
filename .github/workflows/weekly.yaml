@@ -128,4 +128,3 @@ jobs:
         anchorectl -o json subscription list -k ${RELEASE_IMAGE} | jq -r '.[] | select (.subscriptionType == "policy_eval") | .subscriptionId' | xargs anchorectl subscription activate
         anchorectl -o json subscription list -k ${RELEASE_IMAGE} | jq -r '.[] | select (.subscriptionType == "vuln_update") | .subscriptionId' | xargs anchorectl subscription activate
         
-;
