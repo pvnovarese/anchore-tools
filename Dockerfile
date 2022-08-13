@@ -19,7 +19,7 @@ RUN apk add --no-cache --upgrade \
     bash-completion \
     && python3 -m ensurepip \
     && pip3 install anchorecli \
-    && curl https://anchorectl-releases.s3-us-west-2.amazonaws.com/v0.2.3/anchorectl_0.2.3_linux_amd64.tar.gz | tar xzvf - -C /usr/local/bin/ \
+    && curl https://anchorectl-releases.anchore.io/anchorectl/v0.2.3/anchorectl_0.2.3_linux_amd64.tar.gz | tar xzvf - -C /usr/local/bin/ \
     && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin \
     && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin 
 
