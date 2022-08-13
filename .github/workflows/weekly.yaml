@@ -33,6 +33,7 @@ jobs:
     - name: "Set environmental variables"
       run: |
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "image: ${IMAGE}"
     
     - name: Checkout Code
       uses: actions/checkout@v2      
@@ -96,7 +97,11 @@ jobs:
     
     - name: "Set environmental variables"
       run: |
+        ls
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "image: ${IMAGE}
+        echo "release registry: ${RELEASE_REGISTRY}"
+        echo "release tag: ${RELEASE_TAG}"
         echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
         echo "release image: ${RELEASE_IMAGE}"
         echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_IMAGE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
