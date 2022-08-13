@@ -23,14 +23,17 @@ RUN apk add --no-cache --upgrade \
     && pip3 install anchorecli \
     && curl https://anchorectl-releases.anchore.io/anchorectl/v0.2.3/anchorectl_0.2.3_linux_amd64.tar.gz | tar xzvf - -C /usr/local/bin/ \
     && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin \
-    && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin 
+    && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin \
+    && addgroup -g 1000 anchore \
+    && adduser -u 1000 -G anchore --shell /bin/sh -D anchore 
+    
 
 # ensure we have a unique build and also provide a little metadata
 RUN date > /image_build_timestamp && \
     touch image_build_timestamp_$(date +%Y-%m-%d_%T)
     
 # Setting WORKDIR and USER 
-USER nobody 
-WORKDIR /tmp
+USER anchore 
+WORKDIR /home/anchore
 
 CMD ["/bin/bash"]
