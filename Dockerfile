@@ -17,6 +17,7 @@ RUN apk add --no-cache --upgrade \
     jq \
     bash \
     bash-completion \
+    git \
     && python3 -m ensurepip \
     && pip3 install anchorecli \
     && curl https://anchorectl-releases.anchore.io/anchorectl/v0.2.3/anchorectl_0.2.3_linux_amd64.tar.gz | tar xzvf - -C /usr/local/bin/ \
