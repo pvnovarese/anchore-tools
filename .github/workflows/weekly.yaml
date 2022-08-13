@@ -98,7 +98,7 @@ jobs:
       run: |
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
         echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
-        echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_IMAGE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE_TIMESTAMP="${RELEASE_IMAGE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
 
     - name: Checkout Code
       uses: actions/checkout@v2      
