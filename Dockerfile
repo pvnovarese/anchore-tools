@@ -2,9 +2,9 @@ FROM alpine:latest
 
 MAINTAINER Paul Novarese <pvn@novarese.net>
 LABEL maintainer="pvn@novarese.net"
-LABEL name="anchore-tools"
-LABEL org.opencontainers.image.title="anchore-tools"
-LABEL org.opencontainers.image.description="anchore command line scanning tools (syft, grype, anchore-cli, and anchorectl)"
+LABEL name="anchore-tools-unstable"
+LABEL org.opencontainers.image.title="anchore-tools-unstable"
+LABEL org.opencontainers.image.description="unstable version anchore command line scanning tools (syft, grype, anchore-cli, and anchorectl)"
 
 HEALTHCHECK --timeout=10s CMD /bin/true || exit 1
 
@@ -21,9 +21,9 @@ RUN apk add --no-cache --upgrade \
     openssh-client \
     && python3 -m ensurepip \
     && pip3 install anchorecli \
-    && curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.0.0 \
-    && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v0.55.0 \
-    && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.48.0 \
+    && curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin \
+    && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin  \
+    && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin  \
     && addgroup -g 1000 anchore \
     && adduser -u 1000 -G anchore --shell /bin/sh -D anchore 
     
