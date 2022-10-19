@@ -37,7 +37,7 @@ jobs:
         echo "image: ${IMAGE}"
     
     - name: Checkout Unstable Branch
-      uses: actions/checkout@v2    
+      uses: actions/checkout@v3    
       with:
         ref: unstable
 
@@ -52,7 +52,6 @@ jobs:
         image: ${{ env.IMAGE }}
         fail-build: false
         severity-cutoff: critical
-        acs-report-enable: true
         
     - name: Upload Anchore Scan SARIF Report
       uses: github/codeql-action/upload-sarif@v2
@@ -77,7 +76,7 @@ jobs:
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         
     - name: Checkout Unstable Branch
-      uses: actions/checkout@v2   
+      uses: actions/checkout@v3 
       with:
         ref: unstable
       
@@ -106,8 +105,11 @@ jobs:
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
-    - name: Checkout Code
-      uses: actions/checkout@v2      
+        
+    - name: Checkout Unstable Branch
+      uses: actions/checkout@v3 
+      with:
+        ref: unstable
       
     - name: Install CLI Tools
       run: |
@@ -128,9 +130,7 @@ jobs:
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
         anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ./Dockerfile ${RELEASE_IMAGE}
-
     - name: Activate Subscriptions
       run: |
         anchorectl subscription activate ${RELEASE_IMAGE} policy_eval
-        anchorectl subscription activate ${RELEASE_IMAGE} vuln_update
-        
+        anchorectl subscription activate ${RELEASE_IMAGE} vuln_update        
