@@ -130,6 +130,5 @@ jobs:
         anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ./Dockerfile ${RELEASE_IMAGE}
     - name: Activate Subscriptions
       run: |
-        anchorectl -o json subscription list -k ${RELEASE_IMAGE} | jq -r '.[] | select (.subscriptionType == "policy_eval") | .subscriptionId' | xargs anchorectl subscription activate
-        anchorectl -o json subscription list -k ${RELEASE_IMAGE} | jq -r '.[] | select (.subscriptionType == "vuln_update") | .subscriptionId' | xargs anchorectl subscription activate
-        
+        anchorectl subscription activate ${RELEASE_IMAGE} policy_eval
+        anchorectl subscription activate ${RELEASE_IMAGE} vuln_update        
