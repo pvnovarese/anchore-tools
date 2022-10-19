@@ -36,7 +36,7 @@ jobs:
         echo "image: ${IMAGE}"
     
     - name: Checkout Code
-      uses: actions/checkout@v2      
+      uses: actions/checkout@v3   
 
     - name: Build Local Container
       run: |
@@ -49,7 +49,6 @@ jobs:
         image: ${{ env.IMAGE }}
         fail-build: false
         severity-cutoff: critical
-        acs-report-enable: true
         
     - name: Upload Anchore Scan SARIF Report
       uses: github/codeql-action/upload-sarif@v2
@@ -74,7 +73,7 @@ jobs:
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
         
     - name: Checkout Code
-      uses: actions/checkout@v2      
+      uses: actions/checkout@v3  
       
     - name: Install CLI Tools
       run: |
@@ -103,12 +102,12 @@ jobs:
         echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${GITHUB_REF_NAME}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
 
     - name: Checkout Code
-      uses: actions/checkout@v2      
+      uses: actions/checkout@v3   
       
     - name: Install CLI Tools
       run: |
-        curl https://anchorectl-releases.anchore.io/anchorectl/v0.2.3/anchorectl_0.2.3_linux_amd64.tar.gz | tar xzvf - -C /usr/local/bin/
-
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.1.0
+        
     - name: Login to Registry
       run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
 
@@ -127,6 +126,5 @@ jobs:
 
     - name: Activate Subscriptions
       run: |
-        anchorectl -o json subscription list -k ${RELEASE_IMAGE} | jq -r '.[] | select (.subscriptionType == "policy_eval") | .subscriptionId' | xargs anchorectl subscription activate
-        anchorectl -o json subscription list -k ${RELEASE_IMAGE} | jq -r '.[] | select (.subscriptionType == "vuln_update") | .subscriptionId' | xargs anchorectl subscription activate
-        
+        anchorectl subscription activate ${RELEASE_IMAGE} policy_eval
+        anchorectl subscription activate ${RELEASE_IMAGE} vuln_update                
