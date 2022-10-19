@@ -63,8 +63,29 @@ jobs:
         docker push ${IMAGE}
         
         
-  Anchore-Enterprise:
+  Smoke-Test:
     needs: Build-Push
+    runs-on: ubuntu-latest        
+    steps:
+    - name: "Set environmental variables"
+      run: |
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
+    - name: "Test anchorectl"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} anchorectl system status
+    - name: "Test syft"
+      run: |
+        docker run --rm ${IMAGE} syft alpine:latest
+    - name: "Test grype"
+      run: |
+        docker run --rm ${IMAGE} grype alpine:latest
+    - name: "Test jq"
+      run: |
+        docker run --rm ${IMAGE} sh -c "syft -o json alpine:latest | jq .artifacts[].name"
+      
+        
+  Anchore-Enterprise:
+    needs: Smoke-Test
     runs-on: ubuntu-latest
     steps:
     
@@ -77,7 +98,7 @@ jobs:
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.1.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.2.0
     
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
@@ -106,7 +127,7 @@ jobs:
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.1.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.2.0
         
     - name: Login to Registry
       run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
