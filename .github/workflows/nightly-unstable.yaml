@@ -105,8 +105,11 @@ jobs:
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
-    - name: Checkout Code
-      uses: actions/checkout@v2      
+        
+    - name: Checkout Unstable Branch
+      uses: actions/checkout@v3 
+      with:
+        ref: unstable
       
     - name: Install CLI Tools
       run: |
