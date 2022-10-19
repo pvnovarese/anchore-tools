@@ -72,8 +72,7 @@ jobs:
         docker run --rm ${IMAGE} sh -c "syft -o json alpine:latest | jq .artifacts[].name"
     - name: "Test syft-anchorectl"
       run: |
-        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages debian:stable-slim | anchorectl image add --no-auto-subscribe --wait debian:stable-slim --from -"
-        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} anchorectl image delete --force debian:stable-slim
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages debian:stable-slim | anchorectl image add --no-auto-subscribe --force --wait debian:stable-slim --from -"
       
       
         
