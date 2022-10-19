@@ -8,7 +8,7 @@ on:
   #  branches:
   #    - main
   schedule:
-    - cron: '12 23 * * *'
+    - cron: '12 22 * * *'
   workflow_dispatch:
     inputs:
       mode:
@@ -36,27 +36,12 @@ jobs:
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         echo "image: ${IMAGE}"
     
-    - name: Checkout Unstable Branch
+    - name: Checkout Code
       uses: actions/checkout@v3    
-      with:
-        ref: unstable
 
     - name: Build Local Container
       run: |
-        docker build . --file Dockerfile --tag ${IMAGE}
-        
-    - name: Scan Image
-      uses: anchore/scan-action@v3
-      id: scan
-      with:
-        image: ${{ env.IMAGE }}
-        fail-build: false
-        severity-cutoff: critical
-        
-    - name: Upload Anchore Scan SARIF Report
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: ${{ steps.scan.outputs.sarif }}
+        docker build . --file .testing/Dockerfile-unstable --tag ${IMAGE}
 
     - name: Login to Registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${IMAGE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
@@ -75,14 +60,12 @@ jobs:
       run: |
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         
-    - name: Checkout Unstable Branch
+    - name: Checkout Code
       uses: actions/checkout@v3 
-      with:
-        ref: unstable
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.1.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.2.0
     
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
@@ -106,14 +89,12 @@ jobs:
         echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
         
-    - name: Checkout Unstable Branch
+    - name: Checkout Code
       uses: actions/checkout@v3 
-      with:
-        ref: unstable
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.1.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.2.0
         
     - name: Login to Registry
       run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
