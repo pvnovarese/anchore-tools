@@ -1,0 +1,135 @@
+# This workflow checks out code, builds an image, performs a container image
+# scan, evaluates the image, and promotes it if it passes.
+
+name: Nightly-Unstable
+
+on: 
+  #push:
+  #  branches:
+  #    - main
+  schedule:
+    - cron: '12 23 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Manual Build'  
+        
+env:
+  ANCHORECTL_USERNAME: ${{ secrets.ANCHORECTL_USERNAME }}
+  ANCHORECTL_PASSWORD: ${{ secrets.ANCHORECTL_PASSWORD }}
+  ANCHORECTL_URL: ${{ secrets.ANCHORECTL_URL }}
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_TAG: nightly-
+  RELEASE_REGISTRY: docker.io
+  RELEASE_TAG: ""
+
+  
+jobs:
+
+  Build-Push:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: "Set environmental variables"
+      run: |
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "image: ${IMAGE}"
+    
+    - name: Checkout Unstable Branch
+      uses: actions/checkout@v2    
+        with:
+          ref: unstable
+
+    - name: Build Local Container
+      run: |
+        docker build . --file Dockerfile --tag ${IMAGE}
+        
+    - name: Scan Image
+      uses: anchore/scan-action@v3
+      id: scan
+      with:
+        image: ${{ env.IMAGE }}
+        fail-build: false
+        severity-cutoff: critical
+        acs-report-enable: true
+        
+    - name: Upload Anchore Scan SARIF Report
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif }}
+
+    - name: Login to Registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${IMAGE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+
+    - name: Push Docker Image
+      run: |
+        docker push ${IMAGE}
+        
+        
+  Anchore-Enterprise:
+    needs: Build-Push
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: "Set environmental variables"
+      run: |
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        
+    - name: Checkout Unstable Branch
+      uses: actions/checkout@v2   
+        with:
+          ref: unstable
+      
+    - name: Install CLI Tools
+      run: |
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.1.0
+    
+    - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
+      run: |
+        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ./Dockerfile ${IMAGE}
+        
+    - name: Pull Policy Evaluation
+      run: |
+        set -o pipefail
+        anchorectl image check --fail-based-on-results --detail ${IMAGE} 
+        
+        
+  Release:
+    needs: Anchore-Enterprise
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: "Set environmental variables"
+      run: |
+        ls
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${GITHUB_REF_NAME}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
+    - name: Checkout Code
+      uses: actions/checkout@v2      
+      
+    - name: Install CLI Tools
+      run: |
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.1.0
+        
+    - name: Login to Registry
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+
+    - name: Promote Image
+      run: |
+        docker login 
+        docker pull ${IMAGE}
+        docker tag ${IMAGE} ${RELEASE_IMAGE}
+        docker push ${RELEASE_IMAGE}
+        docker tag ${RELEASE_IMAGE} ${RELEASE_IMAGE_TIMESTAMP}
+        docker push ${RELEASE_IMAGE_TIMESTAMP}
+        
+    - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
+      run: |
+        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ./Dockerfile ${RELEASE_IMAGE}
+
+    - name: Activate Subscriptions
+      run: |
+        anchorectl -o json subscription list -k ${RELEASE_IMAGE} | jq -r '.[] | select (.subscriptionType == "policy_eval") | .subscriptionId' | xargs anchorectl subscription activate
+        anchorectl -o json subscription list -k ${RELEASE_IMAGE} | jq -r '.[] | select (.subscriptionType == "vuln_update") | .subscriptionId' | xargs anchorectl subscription activate
+        
