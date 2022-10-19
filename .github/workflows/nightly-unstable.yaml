@@ -20,6 +20,7 @@ env:
   ANCHORECTL_URL: ${{ secrets.ANCHORECTL_URL }}
   IMAGE_REGISTRY: ghcr.io
   IMAGE_TAG: nightly-
+  TAG_BASE: unstable
   RELEASE_REGISTRY: docker.io
   RELEASE_TAG: ""
 
@@ -32,7 +33,7 @@ jobs:
     
     - name: "Set environmental variables"
       run: |
-        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         echo "image: ${IMAGE}"
     
     - name: Checkout Unstable Branch
@@ -73,7 +74,7 @@ jobs:
     
     - name: "Set environmental variables"
       run: |
-        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
         
     - name: Checkout Unstable Branch
       uses: actions/checkout@v2   
@@ -102,9 +103,9 @@ jobs:
     - name: "Set environmental variables"
       run: |
         ls
-        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
-        echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
-        echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${GITHUB_REF_NAME}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
     - name: Checkout Code
       uses: actions/checkout@v2      
       
