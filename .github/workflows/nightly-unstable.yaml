@@ -37,8 +37,8 @@ jobs:
     
     - name: Checkout Unstable Branch
       uses: actions/checkout@v2    
-        with:
-          ref: unstable
+      with:
+        ref: unstable
 
     - name: Build Local Container
       run: |
@@ -77,8 +77,8 @@ jobs:
         
     - name: Checkout Unstable Branch
       uses: actions/checkout@v2   
-        with:
-          ref: unstable
+      with:
+        ref: unstable
       
     - name: Install CLI Tools
       run: |
