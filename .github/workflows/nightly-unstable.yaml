@@ -77,7 +77,7 @@ jobs:
         docker run --rm ${IMAGE} sh -c "syft -o json alpine:latest | jq .artifacts[].name"
     - name: "Test syft-anchorectl"
       run: |
-        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages docker.io/pvnovarese/2022-09-enterprise-demo:main | anchorectl image add --no-auto-subscribe --force --wait docker.io/pvnovarese/anchore-tools-smoketest:nightly-unstable --from -"
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages docker.io/pvnovarese/2023-01-enterprise-demo:main | anchorectl image add --no-auto-subscribe --force --wait docker.io/pvnovarese/anchore-tools-smoketest:nightly-unstable --from -"
       
         
   Anchore-Enterprise:
