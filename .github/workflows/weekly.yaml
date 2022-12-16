@@ -8,7 +8,7 @@ on:
   #  branches:
   #    - main
   schedule:
-    - cron: '52 23 * * 5'
+    - cron: '52 23 3 * *'
   workflow_dispatch:
     inputs:
       mode:
@@ -100,7 +100,7 @@ jobs:
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.2.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.3.0
     
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
@@ -129,7 +129,7 @@ jobs:
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.2.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.3.0
         
     - name: Login to Registry
       run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
