@@ -20,6 +20,7 @@ RUN apk add --no-cache --upgrade \
     git \
     openssh-client \
     && python3 -m ensurepip \
+    && pip3 install --upgrade pip setuptools \
     && pip3 install anchorecli \
     && curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.3.0 \
     && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v0.63.0 \
