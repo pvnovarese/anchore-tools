@@ -19,7 +19,7 @@ env:
   ANCHORECTL_PASSWORD: ${{ secrets.ANCHORECTL_PASSWORD }}
   ANCHORECTL_URL: ${{ secrets.ANCHORECTL_URL }}
   IMAGE_REGISTRY: ghcr.io
-  IMAGE_TAG: weekly-
+  IMAGE_TAG: monthly-
   RELEASE_REGISTRY: docker.io
   RELEASE_TAG: ""
 
