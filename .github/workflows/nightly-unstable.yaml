@@ -60,6 +60,7 @@ jobs:
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
     - name: "Version checks"
       run: | 
+        docker run --rm ${IMAGE} anchore-cli --version
         docker run --rm ${IMAGE} anchorectl version
         docker run --rm ${IMAGE} syft version
         docker run --rm ${IMAGE} grype version
