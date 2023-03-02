@@ -69,6 +69,11 @@ jobs:
     - name: "Set environmental variables"
       run: |
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${GITHUB_REF_NAME}" >> $GITHUB_ENV
+    - name: "Version checks"
+      run: | 
+        docker run --rm ${IMAGE} anchorectl version
+        docker run --rm ${IMAGE} syft version
+        docker run --rm ${IMAGE} grype version
     - name: "Test anchorectl"
       run: |
         docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} anchorectl system status
