@@ -33,7 +33,7 @@ jobs:
     
     - name: "Set environmental variables"
       run: |
-        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}-test" >> $GITHUB_ENV
         echo "image: ${IMAGE}"
     
     - name: Checkout Code
@@ -114,9 +114,9 @@ jobs:
     - name: "Set environmental variables"
       run: |
         ls
-        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
-        echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}" >> $GITHUB_ENV
-        echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}${TAG_BASE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}-test" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE_TIMESTAMP=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
         
     - name: Checkout Code
       uses: actions/checkout@v3 
@@ -126,11 +126,13 @@ jobs:
         curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.2.0
         
     - name: Login to Registry
-      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${IMAGE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+                
+#    - name: Login to Registry
+#      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
 
     - name: Promote Image
       run: |
-        docker login 
         docker pull ${IMAGE}
         docker tag ${IMAGE} ${RELEASE_IMAGE}
         docker push ${RELEASE_IMAGE}
