@@ -1,4 +1,4 @@
-FROM cgr.dev/chainguard/alpine-base:latest
+FROM cgr.dev/chainguard/wolfi-base:latest
 
 MAINTAINER Paul Novarese <pvn@novarese.net>
 LABEL maintainer="pvn@novarese.net"
