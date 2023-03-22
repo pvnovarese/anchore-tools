@@ -98,7 +98,7 @@ jobs:
     
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
-        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ./Dockerfile ${IMAGE}
+        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile .testing/Dockerfile-unstable ${IMAGE}
         
     - name: Pull Policy Evaluation
       run: |
@@ -141,7 +141,7 @@ jobs:
         
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
-        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ./Dockerfile ${RELEASE_IMAGE}
+        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile .testing/Dockerfile-unstable ${RELEASE_IMAGE}
     - name: Activate Subscriptions
       run: |
         anchorectl subscription activate ${RELEASE_IMAGE} policy_eval
