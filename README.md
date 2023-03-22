@@ -1,5 +1,5 @@
 # anchore-tools
-[![Weekly](https://github.com/pvnovarese/anchore-tools/actions/workflows/weekly.yaml/badge.svg)](https://github.com/pvnovarese/anchore-tools/actions/workflows/weekly.yaml)
+[![Monthly](https://github.com/pvnovarese/anchore-tools/actions/workflows/monthly.yaml/badge.svg)](https://github.com/pvnovarese/anchore-tools/actions/workflows/monthly.yaml) [![Nightly-Unstable](https://github.com/pvnovarese/anchore-tools/actions/workflows/nightly-unstable.yaml/badge.svg)](https://github.com/pvnovarese/anchore-tools/actions/workflows/nightly-unstable.yaml)
 
 Small image with both anchorectl and anchore-cli.  This will become obsolete eventually as anchorectl will incorporate all of anchore-cli's functionality.
 
