@@ -117,7 +117,6 @@ jobs:
         ls
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}-test" >> $GITHUB_ENV
         echo "RELEASE_IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}" >> $GITHUB_ENV
-        echo "RELEASE_IMAGE_TIMESTAMP=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}${TAG_BASE}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
         
     - name: Checkout Code
       uses: actions/checkout@v3 
@@ -137,8 +136,6 @@ jobs:
         docker pull ${IMAGE}
         docker tag ${IMAGE} ${RELEASE_IMAGE}
         docker push ${RELEASE_IMAGE}
-        docker tag ${RELEASE_IMAGE} ${RELEASE_IMAGE_TIMESTAMP}
-        docker push ${RELEASE_IMAGE_TIMESTAMP}
         
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
