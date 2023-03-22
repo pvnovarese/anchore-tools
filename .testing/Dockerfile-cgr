@@ -19,7 +19,7 @@ RUN apk add --no-cache --upgrade \
     && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin \
     && mkdir -p /home \
     && addgroup -g 1000 anchore \
-    && adduser -u 1000 -G anchore --shell /bin/bash -D -h /home/anchore anchore 
+    && adduser -u 1000 -G anchore --shell /bin/bash -D -h /home/anchore anchore \
     && chmod 0755 /home/anchore
 
 # ensure we have a unique build and also provide a little metadata
