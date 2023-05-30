@@ -1,14 +1,16 @@
 # This workflow checks out code, builds an image, performs a container image
 # scan, evaluates the image, and promotes it if it passes.
 
+### deprecated, just keeping this for archive purposes
+
 name: Monthly
 
 on: 
   #push:
   #  branches:
   #    - main
-  schedule:
-    - cron: '52 23 3 * *'
+  #schedule:
+  #  - cron: '52 23 3 * *'
   workflow_dispatch:
     inputs:
       mode:
