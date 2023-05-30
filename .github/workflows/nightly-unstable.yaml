@@ -79,11 +79,13 @@ jobs:
         docker run --rm ${IMAGE} sh -c "syft -o json alpine:latest | jq .artifacts[].name"
     - name: "Test anchorectl connectivity"
       run: |
-        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "anchorectl system status &&"
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "anchorectl system status"
     - name: "Test anchorectl distributed image scan"
       run: |
         docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
-        sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --from registry && anchorectl image vulns ${SMOKETEST_IMAGE}"
+          sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --from registry"
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image vulns ${SMOKETEST_IMAGE}"
       
         
   Anchore-Enterprise:
