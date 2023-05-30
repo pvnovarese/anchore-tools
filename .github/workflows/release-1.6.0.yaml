@@ -21,7 +21,7 @@ env:
   ANCHORECTL_PASSWORD: ${{ secrets.ANCHORECTL_PASSWORD }}
   ANCHORECTL_URL: ${{ secrets.ANCHORECTL_URL }}
   IMAGE_REGISTRY: "ghcr.io"
-  IMAGE_TAG: "v1.6.0-"
+  IMAGE_TAG: "v1.6.0"
   RELEASE_REGISTRY: "docker.io"
   RELEASE_TAG: "v1.6.0"
   SMOKETEST_IMAGE: "docker.io/pvnovarese/smoketest-slim:latest"
@@ -136,7 +136,7 @@ jobs:
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}-${GITHUB_REF_NAME}" >> $GITHUB_ENV
         echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}" >> $GITHUB_ENV
         echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
-        echo "LATEST_IMAGE="${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:latest" >> $GITHUB_ENV
+        echo "LATEST_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:latest" >> $GITHUB_ENV
 
     - name: Checkout Code
       uses: actions/checkout@v3   
