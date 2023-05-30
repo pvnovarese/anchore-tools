@@ -24,6 +24,7 @@ env:
   IMAGE_TAG: "v1.6.0-"
   RELEASE_REGISTRY: "docker.io"
   RELEASE_TAG: "v1.6.0"
+  SMOKETEST_IMAGE: "docker.io/pvnovarese/smoketest-slim:latest"
 
   
 jobs:
@@ -88,10 +89,15 @@ jobs:
     - name: "Test jq"
       run: |
         docker run --rm ${IMAGE} sh -c "syft -o json alpine:latest | jq .artifacts[].name"
-    - name: "Test syft-anchorectl"
+    - name: "Test anchorectl connectivity"
       run: |
-        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages ghcr.io/pvnovarese/2023-01-enterprise-demo:main | anchorectl image add --no-auto-subscribe --force --wait docker.io/pvnovarese/anchore-tools-smoketest:weekly-stable --from -"        
-
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "anchorectl system status"
+    - name: "Test anchorectl distributed image scan"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --from registry"
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image vulns ${SMOKETEST_IMAGE}"
 
   Anchore-Enterprise:
     needs: Smoke-Test
