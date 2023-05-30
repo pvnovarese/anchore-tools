@@ -23,6 +23,8 @@ env:
   TAG_BASE: cgr-unstable
   RELEASE_REGISTRY: docker.io
   RELEASE_TAG: ""
+  DOCKERFILE: ".testing/Dockerfile-cgr"
+  SMOKETEST_IMAGE: "docker.io/pvnovarese/smoketest-slim:latest"
 
   
 jobs:
@@ -41,21 +43,8 @@ jobs:
 
     - name: Build Local Container
       run: |
-        docker build . --file .testing/Dockerfile-cgr --tag ${IMAGE}
+        docker build . --pull --no-cache --file ${DOCKERFILE} --tag ${IMAGE}
         
-    #- name: Scan Image
-    #  uses: anchore/scan-action@v3
-    #  id: scan
-    #  with:
-    #    image: ${{ env.IMAGE }}
-    #    fail-build: false
-    #    severity-cutoff: critical
-    #    
-    #- name: Upload Anchore Scan SARIF Report
-    #  uses: github/codeql-action/upload-sarif@v2
-    #  with:
-    #    sarif_file: ${{ steps.scan.outputs.sarif }}
-
     - name: Login to Registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${IMAGE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
 
@@ -83,10 +72,16 @@ jobs:
     - name: "Test jq"
       run: |
         docker run --rm ${IMAGE} sh -c "syft -o json alpine:latest | jq .artifacts[].name"
-    - name: "Test syft-anchorectl"
+    - name: "Test anchorectl connectivity"
       run: |
-        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages ghcr.io/pvnovarese/2023-03-demo:main | anchorectl -vv image add --no-auto-subscribe --force --wait ghcr.io/pvnovarese/anchore-tools-smoketest:cgr-unstable --from -"
-        
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl system status"
+    - name: "Test anchorectl distributed image scan"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --from registry"
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image vulns ${SMOKETEST_IMAGE}"        
         
   Anchore-Enterprise:
     needs: Smoke-Test
