@@ -13,18 +13,14 @@ RUN apk add --no-cache --upgrade \
     curl \
     wget \
     grep \
-    python3 \
     jq \
     bash \
     bash-completion \
     git \
     openssh-client \
-    && python3 -m ensurepip \
-    && pip3 install --upgrade pip setuptools \
-    && pip3 install anchorecli \
-    && curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v1.6.0 \
-    && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v0.79.0 \
-    && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.61.1 \
+    && curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin \
+    && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin \
+    && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin \
     && addgroup -g 1000 anchore \
     && adduser -u 1000 -G anchore --shell /bin/sh -D anchore 
     
