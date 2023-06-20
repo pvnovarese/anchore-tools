@@ -83,7 +83,7 @@ jobs:
     - name: "Test anchorectl distributed image scan"
       run: |
         docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
-          sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --from registry"
+          sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --annotation scan-type=distributed --from registry"
         docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
           sh -c "anchorectl image vulns ${SMOKETEST_IMAGE}"
       
@@ -104,9 +104,9 @@ jobs:
       run: |
         curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin 
     
-    - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
+    - name: Scan Image with anchorectl and Wait for Analysis
       run: |
-        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ${DOCKERFILE} ${IMAGE}
+        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --annotation scan-type=distributed --from registry --dockerfile ${DOCKERFILE} ${IMAGE}
         
     - name: Pull Policy Evaluation
       run: |
@@ -146,7 +146,7 @@ jobs:
         
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
-        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ${DOCKERFILE} ${RELEASE_IMAGE}
+        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ${DOCKERFILE} --annotation scan-type=distributed --from registry ${RELEASE_IMAGE}
     - name: Activate Subscriptions
       run: |
         anchorectl subscription activate ${RELEASE_IMAGE} policy_eval
