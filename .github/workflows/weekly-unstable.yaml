@@ -1,14 +1,14 @@
 # This workflow checks out code, builds an image, performs a container image
 # scan, evaluates the image, and promotes it if it passes.
 
-name: Nightly-Unstable
+name: Weekly-Unstable
 
 on: 
   #push:
   #  branches:
   #    - main
   schedule:
-    - cron: '12 22 * * 1-5'
+    - cron: '12 22 * * 2'
   workflow_dispatch:
     inputs:
       mode:
