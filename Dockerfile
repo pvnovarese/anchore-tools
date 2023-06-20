@@ -22,7 +22,8 @@ RUN apk add --no-cache --upgrade \
     && curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin \
     && curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin \
     && addgroup -g 1000 anchore \
-    && adduser -u 1000 -G anchore --shell /bin/sh -D anchore 
+    && adduser -u 1000 -G anchore --shell /bin/bash -D anchore \
+    && chmod 0755 /home/anchore
     
 
 # ensure we have a unique build and also provide a little metadata
