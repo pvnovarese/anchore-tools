@@ -15,9 +15,9 @@ on:
         description: 'Manual Build'  
         
 env:
-  ANCHORECTL_USERNAME: ${{ secrets.ANCHORECTL_USERNAME }}
+  ANCHORECTL_USERNAME: ${{ vars.ANCHORECTL_USERNAME }}
   ANCHORECTL_PASSWORD: ${{ secrets.ANCHORECTL_PASSWORD }}
-  ANCHORECTL_URL: ${{ secrets.ANCHORECTL_URL }}
+  ANCHORECTL_URL: ${{ vars.ANCHORECTL_URL }}
   IMAGE_REGISTRY: "ghcr.io"
   IMAGE_TAG: "nightly-"
   TAG_BASE: "unstable"
