@@ -88,7 +88,7 @@ jobs:
     - name: "Test syft-anchorectl source add"
       run: |
         docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
-        sh -c "git clone ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git; syft -o json ${GITHUB_REPOSITORY##*/} | anchorectl source add ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7} --application ${GITHUB_REPOSITORY##*/}@HEAD --from -; anchorectl source vulnerabilities ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7}; anchorectl source delete ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7}"
+        sh -c "git clone ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git; syft -o json ${GITHUB_REPOSITORY##*/} | anchorectl source add ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7} --wait --application ${GITHUB_REPOSITORY##*/}@HEAD --from -; anchorectl source vulnerabilities ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7}; anchorectl source delete ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7}"
 
         
         
