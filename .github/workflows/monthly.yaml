@@ -89,10 +89,20 @@ jobs:
     - name: "Test jq"
       run: |
         docker run --rm ${IMAGE} sh -c "syft -o json alpine:latest | jq .artifacts[].name"
-    - name: "Test syft-anchorectl"
+    - name: "Test anchorectl distributed image scan"
       run: |
-        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages ghcr.io/pvnovarese/2023-01-enterprise-demo:main | anchorectl image add --no-auto-subscribe --force --wait docker.io/pvnovarese/anchore-tools-smoketest:weekly-stable --from -"        
-
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --annotation scan-type=distributed --from registry"
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image vulns ${SMOKETEST_IMAGE}"
+    - name: "Test syft-anchorectl image add"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages ghcr.io/pvnovarese/2023-01-enterprise-demo:main | anchorectl image add --no-auto-subscribe --force --wait docker.io/pvnovarese/anchore-tools-smoketest:weekly-stable --from -"
+    - name: "Test syft-anchorectl source add"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+        sh -c "git clone ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git; syft -o json ${GITHUB_REPOSITORY##*/} | anchorectl source add ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7} --application ${GITHUB_REPOSITORY##*/}@HEAD --from -"
+        
 
   Anchore-Enterprise:
     needs: Smoke-Test
