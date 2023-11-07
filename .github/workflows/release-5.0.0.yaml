@@ -1,0 +1,174 @@
+# This workflow checks out code, builds an image, performs a container image
+# scan, evaluates the image, and promotes it if it passes.
+
+name: Release-5.0.0
+
+on: 
+  #push:
+  #  branches:
+  #    - main
+  #schedule:
+  #  - cron: '52 23 3 * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Manual Build'  
+        
+env:
+  ANCHORECTL_USERNAME: ${{ secrets.ANCHORECTL_USERNAME }}
+  ANCHORECTL_PASSWORD: ${{ secrets.ANCHORECTL_PASSWORD }}
+  ANCHORECTL_URL: ${{ secrets.ANCHORECTL_URL }}
+  IMAGE_REGISTRY: "ghcr.io"
+  IMAGE_TAG: "v4.9.0"
+  RELEASE_REGISTRY: "docker.io"
+  RELEASE_TAG: "v4.9.0"
+  SMOKETEST_IMAGE: "docker.io/pvnovarese/smoketest-slim:latest"
+
+  
+jobs:
+
+  Build-Push:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: "Set environmental variables"
+      run: |
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}-${GITHUB_REF_NAME}" >> $GITHUB_ENV
+    
+    - name: Checkout Code
+      uses: actions/checkout@v3   
+
+    - name: Build Local Container
+      run: |
+        docker build . --file Dockerfile --tag ${IMAGE}
+        
+    - name: Scan Image
+      uses: anchore/scan-action@v3
+      id: scan
+      with:
+        image: ${{ env.IMAGE }}
+        fail-build: false
+        severity-cutoff: critical
+        
+    - name: Upload Anchore Scan SARIF Report
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif }}
+
+    - name: Login to Registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${IMAGE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+
+    - name: Push Docker Image
+      run: |
+        docker push ${IMAGE}
+        
+        
+  Smoke-Test:
+    needs: Build-Push
+    runs-on: ubuntu-latest        
+    steps:
+    - name: "Set environmental variables"
+      run: |
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}-${GITHUB_REF_NAME}" >> $GITHUB_ENV
+    - name: "Version checks"
+      run: | 
+        docker run --rm ${IMAGE} anchorectl version
+        docker run --rm ${IMAGE} syft version
+        docker run --rm ${IMAGE} grype version
+    - name: "Test anchorectl"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} anchorectl system status
+    - name: "Test syft"
+      run: |
+        docker run --rm ${IMAGE} syft alpine:latest
+    - name: "Test grype"
+      run: |
+        docker run --rm ${IMAGE} grype alpine:latest
+    - name: "Test jq"
+      run: |
+        docker run --rm ${IMAGE} sh -c "syft -o json alpine:latest | jq .artifacts[].name"
+    - name: "Test anchorectl connectivity"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "anchorectl system status"
+    - name: "Test anchorectl distributed image scan"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --from registry"
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+          sh -c "anchorectl image vulns ${SMOKETEST_IMAGE}"
+    - name: "Test syft-anchorectl image add"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages ghcr.io/pvnovarese/2023-01-enterprise-demo:main | anchorectl image add --no-auto-subscribe --force --wait docker.io/pvnovarese/anchore-tools-smoketest:weekly-stable --from -"
+    - name: "Test syft-anchorectl source add"
+      run: |
+        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
+        sh -c "git clone ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git; syft -o json ${GITHUB_REPOSITORY##*/} | anchorectl source add ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA:0:7} --application ${GITHUB_REPOSITORY##*/}@HEAD --from -"
+
+  Anchore-Enterprise:
+    needs: Smoke-Test
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: "Set environmental variables"
+      run: |
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}-${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        
+    - name: Checkout Code
+      uses: actions/checkout@v3  
+      
+    - name: Install CLI Tools
+      run: |
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v4.9.0
+    
+    - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
+      run: |
+        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ./Dockerfile ${IMAGE}
+        
+    - name: Pull Policy Evaluation
+      run: |
+        set -o pipefail
+        anchorectl image check --fail-based-on-results --detail ${IMAGE} 
+
+
+  Release:
+    needs: Anchore-Enterprise
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: "Set environmental variables"
+      run: |
+        ls
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}-${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}" >> $GITHUB_ENV
+        echo "RELEASE_IMAGE_TIMESTAMP=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:${RELEASE_TAG}-$(date +%Y%m%d.%H%M%S)" >> $GITHUB_ENV
+        echo "LATEST_IMAGE=${RELEASE_REGISTRY}/${GITHUB_REPOSITORY}:latest" >> $GITHUB_ENV
+
+    - name: Checkout Code
+      uses: actions/checkout@v3   
+      
+    - name: Install CLI Tools
+      run: |
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v4.9.0
+        
+    - name: Login to Registry
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+
+    - name: Promote Image
+      run: |
+        docker login 
+        docker pull ${IMAGE}
+        docker tag ${IMAGE} ${RELEASE_IMAGE}
+        docker push ${RELEASE_IMAGE}
+        docker tag ${IMAGE} ${RELEASE_IMAGE_TIMESTAMP}
+        docker push ${RELEASE_IMAGE_TIMESTAMP}
+        docker tag ${IMAGE} ${LATEST_IMAGE}
+        docker push ${LATEST_IMAGE}
+
+    - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
+      run: |
+        anchorectl image add --force --no-auto-subscribe --wait --annotation builder=${GITHUB_ACTOR} --annotation build_tool=github --dockerfile ./Dockerfile ${RELEASE_IMAGE}
+
+    - name: Activate Subscriptions
+      run: |
+        anchorectl subscription activate ${RELEASE_IMAGE} policy_eval
+        anchorectl subscription activate ${RELEASE_IMAGE} vuln_update   
