@@ -16,7 +16,7 @@ on:
         
 env:
   ANCHORECTL_USERNAME: ${{ vars.ANCHORECTL_USERNAME }}
-  ANCHORECTL_PASSWORD: ${{ .ANCHORECTL_PASSWORD }}
+  ANCHORECTL_PASSWORD: ${{ secrets.ANCHORECTL_PASSWORD }}
   ANCHORECTL_URL: ${{ vars.ANCHORECTL_URL }}
   IMAGE_REGISTRY: "ghcr.io"
   IMAGE_TAG: "v4.9.0"
@@ -148,7 +148,7 @@ jobs:
         curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v5.0.0
         
     - name: Login to Registry
-      run: echo "${{ .DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
 
     - name: Promote Image
       run: |
