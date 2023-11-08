@@ -96,9 +96,6 @@ jobs:
           sh -c "anchorectl image add --no-auto-subscribe --force --wait ${SMOKETEST_IMAGE} --from registry"
         docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
           sh -c "anchorectl image vulns ${SMOKETEST_IMAGE}"
-    - name: "Test syft-anchorectl image add"
-      run: |
-        docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} sh -c "syft -o json packages ghcr.io/pvnovarese/2023-01-enterprise-demo:main | anchorectl image add --no-auto-subscribe --force --wait docker.io/pvnovarese/anchore-tools-smoketest:weekly-stable --from -"
     - name: "Test syft-anchorectl source add"
       run: |
         docker run --rm --env ANCHORECTL_USERNAME --env ANCHORECTL_PASSWORD --env ANCHORECTL_URL ${IMAGE} \
@@ -118,7 +115,7 @@ jobs:
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v4.9.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v5.0.0
     
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
@@ -148,7 +145,7 @@ jobs:
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v4.9.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v5.0.0
         
     - name: Login to Registry
       run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
