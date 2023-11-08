@@ -15,13 +15,13 @@ on:
         description: 'Manual Build'  
         
 env:
-  ANCHORECTL_USERNAME: ${{ secrets.ANCHORECTL_USERNAME }}
+  ANCHORECTL_USERNAME: ${{ vars.ANCHORECTL_USERNAME }}
   ANCHORECTL_PASSWORD: ${{ secrets.ANCHORECTL_PASSWORD }}
-  ANCHORECTL_URL: ${{ secrets.ANCHORECTL_URL }}
+  ANCHORECTL_URL: ${{ vars.ANCHORECTL_URL }}
   IMAGE_REGISTRY: "ghcr.io"
-  IMAGE_TAG: "v4.9.0"
+  IMAGE_TAG: "v5.0.0"
   RELEASE_REGISTRY: "docker.io"
-  RELEASE_TAG: "v4.9.0"
+  RELEASE_TAG: "v5.0.0"
   SMOKETEST_IMAGE: "docker.io/pvnovarese/smoketest-slim:latest"
 
   
@@ -118,7 +118,7 @@ jobs:
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v4.9.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v5.0.0
     
     - name: Add Image to Anchore Enterprise Queue and Wait for Analysis
       run: |
@@ -148,7 +148,7 @@ jobs:
       
     - name: Install CLI Tools
       run: |
-        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v4.9.0
+        curl -sSfL https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b /usr/local/bin v5.0.0
         
     - name: Login to Registry
       run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login ${RELEASE_REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
