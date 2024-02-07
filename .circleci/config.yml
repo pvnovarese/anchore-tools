@@ -1,0 +1,91 @@
+version: 2
+jobs:
+
+  ### the following variables have been set in the "anchore" context
+  ###
+  ### ANCHORECTL_USERNAME
+  ### ANCHORECTL_PASSWORD
+  ### ANCHORECTL_URL
+  ### 
+  ### see anchorectl docs for more info 
+  ### https://docs.anchore.com/current/docs/using/anchorectl_usage/
+  ### https://docs.anchore.com/current/docs/deployment/anchorectl/
+  ###
+  ### also in this context there is
+  ### ANCHORECTL_FAIL_BASED_ON_RESULTS 
+  ### which is used to control whether to break pipeline if there
+  ### is a policy violation (see scan step below)
+  
+  ### things to do:
+  ### 1)  is there a way to set global variables (constructed from other variables) in circleci?
+  ###     e.g. in codefresh we can "cf_export ANCHORE_REPO=${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}"
+  ###     and use that across steps rather than defining IMAGE in each step.
+  ### 2)  after promoting, optionally add subscriptions for vuln_update and policy_eval etc.
+
+  build-push:
+    machine: true
+    steps:
+      - checkout
+      - run: 
+          name: Set Environment
+          command: |
+            echo "DEBUG: bash_env: "
+            env
+            ### first set the IMAGE variable (can't set this globally if we want to construct it from other variables)
+            echo 'export IMAGE=${DOCKER_USERNAME}/${CIRCLE_PROJECT_REPONAME}:circleci-latest' >> ${BASH_ENV}
+            ### you don't need this if you're using the containerized tools but it won't hurt to leave this
+            echo 'export PATH=${HOME}/.local/bin/:${PATH}' >> ${BASH_ENV}
+            source ${BASH_ENV}
+      - run:
+          name: Build Docker image
+          command: |
+            ### build image
+            docker build --pull --no-cache -t $IMAGE .
+            echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+            docker push ${IMAGE}
+      - run:
+          name: Install Anchore Tools
+          command: |
+            ### install syft and anchorectl.  syft is only needed if you want to scan  
+            ### locally on the runner and push the sboms to Anchore Enterprise.  
+            #
+            curl -sSfL  https://anchorectl-releases.anchore.io/anchorectl/install.sh | sh -s -- -b ${HOME}/.local/bin v5.1.0
+      - run:
+          name: Test Docker image
+          command: |
+            
+            ### this will generate the SBOM locally and push it
+            ### to the anchore enterprise API.
+            
+            anchorectl image add --no-auto-subscribe --wait --from registry ${IMAGE}
+
+            ### notes on anchorectl flags: 
+            ### --wait is necessary if you want to immediately pull vulns or policy evaluations,
+            ### --no-auto-subscribe tells anchore not to continuously poll the tag for new image pushes
+            ### --from can be registry, docker, or local sbom file (omit for centralized scan)
+            ### if you specify --dockerfile <file>, --force is recommended 
+            ### --annotation is always optional
+            ### see "anchorectl image add -h" for more info
+
+            ### pull vulnerability report
+            
+            anchorectl image vulnerabilities ${IMAGE} 
+            
+            ### test policy evaluation.  Set ANCHORECTL_FAIL_BASED_ON_RESULTS=true if you want to break pipeline for a policy violation here.
+            
+            anchorectl image check --detail ${IMAGE} 
+            
+
+            
+workflows:
+  version: 2
+  enterprise:
+    jobs:
+      - build-push:
+          filters:
+            branches:
+              ignore:
+                - scratch
+                - test
+          context:
+            - anchore  # in the "anchore" context, I've defined ANCHORECTL_USERNAME, ANCHORECTL_PASSWORD, ANCHORECTL_URL, ANCHORECTL_FAIL_BASED_ON_RESULTS, DOCKER_USERNAME, and DOCKER_PASSWORD
